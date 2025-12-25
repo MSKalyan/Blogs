@@ -35,9 +35,6 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// View Engine
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'ejs');
 
 // Routes
 app.use('/', indexRoutes);

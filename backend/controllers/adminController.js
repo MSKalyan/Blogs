@@ -22,7 +22,7 @@ export const adminPanel = async (req, res) => {
     const totalUsers = parseInt(countResult.rows[0].count);
     const totalPages = Math.ceil(totalUsers / limit);
 
-    res.render('admin/adminPanel', {
+    res.json('admin/adminPanel', {
       user: req.user,
       users,
       currentPage: page,
