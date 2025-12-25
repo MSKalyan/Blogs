@@ -5,7 +5,7 @@ function requireAuth(req, res, next) {
 
   // If there's no token, redirect to login
   if (!token) {
-    return res.redirect('/auth/login');
+    return res.status(401).json({success:false,message:"Authentication required"});
   }
 
   try {
@@ -20,7 +20,7 @@ function requireAuth(req, res, next) {
     console.error('Authentication error:', err);
     
     // Redirect to login if the token is invalid or expired
-    res.redirect('/auth/login');
+    res.status(403).json({success:false,message:"Admin access required"});
   }
 }
 

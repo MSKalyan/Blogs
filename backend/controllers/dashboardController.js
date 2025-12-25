@@ -9,9 +9,10 @@ export const getDashboard = async (req, res) => {
     const blogs = await getAllMyBlogs(userId);
 
     // Render the dashboard page with the user's blogs
-    res.render('dashboard', {
-      user: req.user,  // Send the logged-in user's info to the view
-      blogs: blogs     // Send the blogs to the view
+    res.json({success:true,data:{
+      user: req.user,  
+     blogs: blogs    
+}
     });
   } catch (err) {
     console.error(err);

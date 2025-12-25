@@ -19,11 +19,11 @@ router.get('/',setUser, async (req, res) => {
       ORDER BY blogs.created_at DESC
     `, [`%${search}%`]);
 
-    res.render('index', {
-      blogs: result.rows,
-      user: req.user,
-      search  // pass back to EJS input box
+        res.json({
+      success: true,
+      blogs: result.rows
     });
+
   } catch (err) {
     console.error(err);
     res.status(500).send('Server Error');
@@ -40,7 +40,7 @@ router.get('/edit-profile', requireAuth, async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM users WHERE id = $1', [userId]);
     const user = result.rows[0];
-    res.render('editProfile', { user });
+    res.json({success:true,data:user});
   } catch (err) {
     console.error(err);
     res.status(500).send('Server Error');
@@ -74,7 +74,15 @@ router.post('/edit-profile', requireAuth, async (req, res) => {
     const newToken = jwt.sign({ id: userId, name, email }, process.env.JWT_SECRET, { expiresIn: '1h' });
     res.cookie('token', newToken, { httpOnly: true });
 
-    res.redirect('/dashboard');
+    res.json({
+	success:true,
+	message:'Profile updated successfully ',
+	data:{
+		id:userId,
+		name,
+		email
+	}
+});
   } catch (err) {
     console.error(err);
     res.status(500).send('Server Error');

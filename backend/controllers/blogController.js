@@ -2,8 +2,22 @@ import { createBlog, getAllBlogs, getAllMyBlogs, getBlogById, updateBlog, delete
 import pool from "../models/db.js";
 
 // Controller to render the page for creating a new blog post
-export const getCreateBlog = (req, res) => {
-  res.render('blogs/create'); // Renders the create blog form (create.ejs)
+export const getCreateBlog = async (req, res) => {
+  const { title, content, category } = req.body;
+  const author = req.user.id;
+  const image = req.file ? req.file.filename : null;
+
+  try {
+    const blog = await createBlog(title, content, author, category, image);
+
+    res.status(201).json({
+      success: true,
+      data: blog
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
 };
 
 // Controller to handle the form submission for creating a new blog post
@@ -14,8 +28,8 @@ export const postCreateBlog = async (req, res) => {
 
   try {
     const newBlog = await createBlog(title, content, author, category, image); // Pass image to the model
-    res.redirect('/dashboard'); // Redirect to the list of all blogs after successful creation
-  } catch (err) {
+    res.status(201).json({success:true,message:"Blog created successfully",data:newBlog});
+ } catch (err) {
     console.error(err);
     res.status(500).send('Server Error');
   }
@@ -47,11 +61,12 @@ export const viewBlog = async (req, res) => {
       [id]
     );
 
-    res.render('blogs/view', {
-      blog,
-      comments,
-      user: req.user,
-      imagePath: blog.image_path ? `/uploads/${blog.image_path}` : null // Add image path to be rendered in the view
+    res.json({
+      success: true,
+      data: {
+        blog,
+        comments
+      }
     });
   } catch (err) {
     console.error("Error fetching blog:", err);
@@ -113,7 +128,7 @@ export const getReactions = async (req, res) => {
 export const getBlogList = async (req, res) => {
   try {
     const blogs = await getAllBlogs(); // Fetch all blogs from the database
-    res.render('index', { blogs, user: req.user }); // Pass blogs and user (if logged in)
+    res.json({success:true,data:blogs});
   } catch (err) {
     console.error(err);
     res.status(500).send('Server Error');
@@ -125,7 +140,7 @@ export const getMyBlogs = async (req, res) => {
   try {
     const userId = req.user.id; // Get the logged-in user's ID
     const blogs = await getAllMyBlogs(userId); // Fetch blogs where author matches userId
-    res.render('blogs/myblogs', { blogs }); // Render the "My Blogs" view
+    res.json({success:true,data:blogs});
   } catch (err) {
     console.error(err);
     res.status(500).send('Server Error');
@@ -137,22 +152,38 @@ export const getEditBlog = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const blog = await getBlogById(id); // Get the blog from the database
+    const blog = await getBlogById(id);
+
     if (!blog) {
-      return res.status(404).send('Blog not found');
+      return res.status(404).json({
+        success: false,
+        message: 'Blog not found'
+      });
     }
 
-    // Check if the logged-in user is the author of the blog
+    // Authorization check
     if (blog.author !== req.user.id) {
-      return res.status(403).send('You can only edit your own blogs');
+      return res.status(403).json({
+        success: false,
+        message: 'You can only edit your own blogs'
+      });
     }
 
-    res.render('blogs/edit', { blog, user: req.user });  // Render the edit page
+    // Send blog data to frontend
+    res.json({
+      success: true,
+      data: blog
+    });
+
   } catch (err) {
     console.error(err);
-    res.status(500).send('Server Error');
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
   }
 };
+
 
 // Controller to handle the form submission for editing a blog post (POST request)
 export const postEditBlog = async (req, res) => {
@@ -167,7 +198,7 @@ export const postEditBlog = async (req, res) => {
 
     // Update the blog with new data
     const updatedBlog = await updateBlog(id, title, content); // Use the updateBlog function from the model
-    res.redirect(`/blogs/${updatedBlog.id}`); // Redirect to the individual blog post after editing
+    res.json({success:true,data:updatedBlog.id}); // Redirect to the individual blog post after editing
   } catch (err) {
     console.error(err);
     res.status(500).send('Server Error');
@@ -190,7 +221,7 @@ export const handleDeleteBlog = async (req, res) => {
     }
 
     const deletedBlog = await deleteBlogFromModel(id); // Delete the blog
-    res.redirect('/dashboard'); // Redirect to the blogs list page after deletion
+    res.json({success:true,message:'Blog deleted'}); // Redirect to the blogs list page after deletion
   } catch (err) {
     console.error(err);
     res.status(500).send('Server Error');

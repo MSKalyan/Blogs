@@ -1,8 +1,7 @@
 import { getAllUsers, getUserById, getUserBlogs, deleteUser, deleteBlog } from '../models/adminModel.js';
 import pool from '../models/db.js';
 
-export const adminPanel = async (req, res) => {
-  try {
+export const adminPanel = async (req, res) => {  try {
     const page = parseInt(req.query.page) || 1;
     const limit = 10;
     const search = req.query.search || '';
@@ -22,20 +21,27 @@ export const adminPanel = async (req, res) => {
     const totalUsers = parseInt(countResult.rows[0].count);
     const totalPages = Math.ceil(totalUsers / limit);
 
-    res.render('admin/adminPanel', {
-      user: req.user,
-      users,
+ res.json({
+  success: true,
+  data: {
+    user: req.user,
+    users,
+    pagination: {
       currentPage: page,
       totalPages,
+      limit
+    },
+    filters: {
       search,
       role
-    });
-  } catch (err) {
+    }
+  }
+});
+}catch (err) {
     console.error(err);
     res.status(500).send('Server Error');
   }
-};
-
+}
 export const viewUserBlogs = async (req, res) => {
   const { id } = req.params;
   const page = parseInt(req.query.page) || 1;
@@ -59,16 +65,27 @@ export const viewUserBlogs = async (req, res) => {
     const name= names.rows[0]?.name;
     const totalBlogs = parseInt(result.rows[0].count);
     const totalPages = Math.ceil(totalBlogs / limit);
-
-    res.render('admin/viewUserBlogs', {
-      blogs,
-      currentPage: page,
-      totalPages,
-      userId: id,
-      name,
-      search,
-      category
+res.json({
+      success: true,
+      data: {
+        user: {
+          id,
+          name: nameResult.rows[0].name
+        },
+        blogs,
+        pagination: {
+          currentPage: page,
+          totalPages,
+          limit,
+          totalBlogs
+        },
+        filters: {
+          search,
+          category
+        }
+      }
     });
+
   } catch (err) {
     console.error(err);
     res.status(500).send('Server Error');
@@ -80,7 +97,7 @@ export const handleDeleteBlog = async (req, res) => {
   const { id } = req.params;
   try {
     await deleteBlog(id);  // Delete the blog
-    res.redirect('/admin/adminpanel');  // Redirect to admin panel after deletion
+    res.json({success:true,message:"deleted successfully"});
   } catch (err) {
     console.error(err);
     res.status(500).send('Server Error');
@@ -92,7 +109,7 @@ export const handleDeleteUser = async (req, res) => {
   const { id } = req.params;
   try {
     await deleteUser(id); // Delete the user from the database
-    res.redirect('/admin/adminpanel'); // Redirect to admin panel after user deletion
+    res.json({success:true,message:"Operation completed successfully"}); // Redirect to admin panel after user deletion
   } catch (err) {
     console.error(err);
     res.status(500).send('Server Error');

@@ -9,16 +9,26 @@ router.post('/:blogId', requireAuth, async (req, res) => {
     const { blogId } = req.params;
     const { content } = req.body;
     const userId = req.user.id;
+     if (!content || content.trim() === '') {
+    return res.status(400).json({
+      success: false,
+      message: 'Comment content is required'
+    });
+  }
 
     try {
-        await pool.query(
+    const result = await pool.query(
             'INSERT INTO comments (blog_id, user_id, content) VALUES ($1, $2, $3)',
             [blogId, userId, content]
         );
-        res.redirect(`/blogs/${blogId}`);
-    } catch (err) {
+res.status(201).json({
+      success: true,
+      message: 'Comment added successfully',
+      data: result.rows[0]
+    });
+  } catch (err) {
         console.error(err);
-        res.status(500).send('Failed to add comment');
+        res.status(500).json({success:false,message:'Failed to add comment'});
     }
 });
 

@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import pool from '../models/db.js'; // database connection
 
 export const getLogin = (req, res) => {
-  res.render('auth/login');
+  res.json({message:'Login endpoint'});
 };
 
 export const postLogin = async (req, res) => {
@@ -30,22 +30,28 @@ export const postLogin = async (req, res) => {
 
     // Set the token in the cookie
     res.cookie('token', token, { httpOnly: true });
-
-    // Redirect based on user role
-    if (user.role === 'admin') {
-      return res.redirect('/admin/adminpanel'); // Admin's dashboard
-    } else {
-      return res.redirect('/'); // Regular user's dashboard
-    }
-
-  } catch (err) {
+     if (user.role === 'admin') {
+	res.json({
+		success:true,
+		role:user.role,
+		token
+    	});
+     }
+    else{
+	res.status(401).json({
+	  success: false,
+	  message: 'Invalid credentials'
+	});
+}
+}
+catch (err) {
     console.error(err);
     return res.status(500).send('Server error');
   }
 };
 
 export const getRegister = (req, res) => {
-  res.render('auth/register');
+  res.json({message:'Register endpoint'});
 };
 
 export const postRegister = async (req, res) => {
@@ -67,8 +73,8 @@ export const postRegister = async (req, res) => {
 
     const newUser = result.rows[0];
 
-    // Redirect to login page after successful registration
-    res.redirect('/auth/login');
+    res.status(201).json({success:true,message:'User registered successfully',
+data:newUser});
   } catch (error) {
     console.error('Error registering user:', error);
     res.status(500).send('Error registering user.');
@@ -77,5 +83,5 @@ export const postRegister = async (req, res) => {
 
 export const logout = (req, res) => {
   res.clearCookie('token');
-  res.redirect('/auth/login');
+  res.json({success:true,message:"Logged out successfully"});
 };
