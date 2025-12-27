@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import api from "../api/api";
 
 function CreateBlog() {
   const [title, setTitle] = useState("");
@@ -9,12 +9,12 @@ function CreateBlog() {
   const [image, setImage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
   const navigate = useNavigate();
 
-  const token = localStorage.getItem("token");
- 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!title || !content || !category) {
       setError("Please fill in all required fields.");
       return;
@@ -30,18 +30,16 @@ function CreateBlog() {
       formData.append("category", category);
       if (image) formData.append("image", image);
 
-      await axios.post("/api/blogs/create", formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
-        },
+      await api.post("/blogs/create", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
 
       navigate("/myblogs");
     } catch (err) {
-      console.error(err);
+      console.error("Create blog failed:", err);
       setError(
-        err.response?.data?.message || "Error creating blog. Please try again."
+        err.response?.data?.message ||
+          "Error creating blog. Please try again."
       );
     } finally {
       setLoading(false);
@@ -49,52 +47,77 @@ function CreateBlog() {
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.formCard}>
-        <h2 style={styles.heading}>✍️ Create New Blog</h2>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+      <div className="w-full max-w-2xl bg-white rounded-xl shadow-lg p-8">
+        <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center">
+          Create New Blog
+        </h2>
 
-        {error && <p style={styles.error}>{error}</p>}
+        {error && (
+          <div className="mb-4 rounded-lg bg-red-100 text-red-700 px-4 py-2 text-sm text-center">
+            {error}
+          </div>
+        )}
 
-        <form onSubmit={handleSubmit} style={styles.form}>
-          <label style={styles.label}>Title *</label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Enter blog title"
-            style={styles.input}
-            required
-          />
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Title */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Title
+            </label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
 
-          <label style={styles.label}>Category *</label>
-          <input
-            type="text"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            placeholder="e.g., Technology, Travel, Food..."
-            style={styles.input}
-            required
-          />
+          {/* Category */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Category
+            </label>
+            <input
+              type="text"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
 
-          <label style={styles.label}>Content *</label>
-          <textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="Write your blog content here..."
-            rows="8"
-            style={styles.textarea}
-            required
-          ></textarea>
+          {/* Content */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Content
+            </label>
+            <textarea
+              rows="7"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
 
-          <label style={styles.label}>Upload Image (optional)</label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => setImage(e.target.files[0])}
-            style={styles.fileInput}
-          />
+          {/* Image */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Cover Image
+            </label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setImage(e.target.files[0])}
+              className="text-sm text-gray-600"
+            />
+          </div>
 
-          <button type="submit" style={styles.submitBtn} disabled={loading}>
+          {/* Submit */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full rounded-lg bg-blue-600 py-2.5 text-white font-medium hover:bg-blue-700 transition disabled:opacity-60"
+          >
             {loading ? "Publishing..." : "Publish Blog"}
           </button>
         </form>
@@ -104,76 +127,3 @@ function CreateBlog() {
 }
 
 export default CreateBlog;
-
-const styles = {
-  container: {
-    minHeight: "100vh",
-    backgroundColor: "#f9fafc",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: "40px 20px",
-  },
-  formCard: {
-    backgroundColor: "#fff",
-    padding: "40px",
-    borderRadius: "16px",
-    boxShadow: "0 8px 24px rgba(0, 0, 0, 0.1)",
-    width: "100%",
-    maxWidth: "600px",
-  },
-  heading: {
-    textAlign: "center",
-    marginBottom: "24px",
-    fontSize: "28px",
-    fontWeight: "700",
-    color: "#222",
-  },
-  label: {
-    display: "block",
-    marginBottom: "8px",
-    fontWeight: "600",
-    color: "#333",
-  },
-  input: {
-    width: "100%",
-    padding: "10px 14px",
-    borderRadius: "8px",
-    border: "1px solid #ccc",
-    fontSize: "16px",
-    marginBottom: "20px",
-  },
-  textarea: {
-    width: "100%",
-    padding: "12px 14px",
-    borderRadius: "8px",
-    border: "1px solid #ccc",
-    fontSize: "16px",
-    marginBottom: "20px",
-    resize: "vertical",
-  },
-  fileInput: {
-    display: "block",
-    marginBottom: "24px",
-  },
-  submitBtn: {
-    width: "100%",
-    backgroundColor: "#4f46e5",
-    color: "#fff",
-    border: "none",
-    padding: "12px",
-    fontSize: "18px",
-    fontWeight: "600",
-    borderRadius: "10px",
-    cursor: "pointer",
-    transition: "all 0.2s ease-in-out",
-  },
-  error: {
-    background: "#fdecea",
-    color: "#d32f2f",
-    padding: "10px 12px",
-    borderRadius: "6px",
-    marginBottom: "16px",
-    textAlign: "center",
-  },
-};

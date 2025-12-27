@@ -1,27 +1,19 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api/api";
 
 const Admin = () => {
   const [users, setUsers] = useState([]);
   const [blogs, setBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const token = localStorage.getItem("token");
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch users first
-        const userRes = await axios.get("/api/admin/adminpanel", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
+        // Cookies are sent automatically
+        const userRes = await api.get("/admin/adminpanel");
         setUsers(userRes.data.users || []);
 
-        // Fetch blogs separately to avoid dependency on adminPanel response
-        const blogRes = await axios.get("/api/admin/blogs", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
+        const blogRes = await api.get("/admin/blogs");
         setBlogs(blogRes.data.blogs || []);
       } catch (err) {
         console.error("Error fetching admin data:", err);
@@ -29,17 +21,16 @@ const Admin = () => {
         setLoading(false);
       }
     };
-    fetchData();
-  }, [token]);
 
-  // Delete user
+    fetchData();
+  }, []);
+
   const handleDeleteUser = async (id) => {
     if (!window.confirm("Are you sure you want to delete this user?")) return;
+
     try {
-      await axios.delete(`/api/admin/users/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setUsers(users.filter((u) => u.id !== id));
+      await api.delete(`/admin/users/${id}`);
+      setUsers((prev) => prev.filter((u) => u.id !== id));
       alert("User deleted successfully!");
     } catch (err) {
       console.error("Failed to delete user:", err);
@@ -47,14 +38,12 @@ const Admin = () => {
     }
   };
 
-  // Delete blog
   const handleDeleteBlog = async (id) => {
     if (!window.confirm("Are you sure you want to delete this blog?")) return;
+
     try {
-      await axios.delete(`/api/admin/blogs/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setBlogs(blogs.filter((b) => b.id !== id));
+      await api.delete(`/admin/blogs/${id}`);
+      setBlogs((prev) => prev.filter((b) => b.id !== id));
       alert("Blog deleted successfully!");
     } catch (err) {
       console.error("Failed to delete blog:", err);
@@ -62,15 +51,21 @@ const Admin = () => {
     }
   };
 
-  if (loading) return <p className="text-center mt-10">Loading admin data...</p>;
+  if (loading) {
+    return <p className="text-center mt-10">Loading admin data...</p>;
+  }
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6 text-center">Admin Dashboard</h1>
+      <h1 className="text-3xl font-bold mb-6 text-center">
+        Admin Dashboard
+      </h1>
 
-      {/* USERS SECTION */}
       <section className="mb-10">
-        <h2 className="text-2xl font-semibold mb-4 border-b pb-2">Manage Users</h2>
+        <h2 className="text-2xl font-semibold mb-4 border-b pb-2">
+          Manage Users
+        </h2>
+
         {users.length === 0 ? (
           <p>No users found.</p>
         ) : (
@@ -92,19 +87,24 @@ const Admin = () => {
         )}
       </section>
 
-      {/* BLOGS SECTION */}
       <section>
-        <h2 className="text-2xl font-semibold mb-4 border-b pb-2">Manage Blogs</h2>
-        {!blogs || blogs.length === 0 ? (
+        <h2 className="text-2xl font-semibold mb-4 border-b pb-2">
+          Manage Blogs
+        </h2>
+
+        {blogs.length === 0 ? (
           <p>No blogs found.</p>
         ) : (
           <ul className="divide-y divide-gray-200">
             {blogs.map((b) => (
               <li key={b.id} className="flex justify-between items-center py-3">
                 <div>
-                  <b>{b.title}</b> —{" "}
-                  <span className="text-gray-600">by {b.author_name}</span>
+                  <b>{b.title}</b>{" "}
+                  <span className="text-gray-600">
+                    — by {b.author_name}
+                  </span>
                 </div>
+
                 <div className="flex gap-3">
                   <button
                     onClick={() => (window.location.href = `/blogs/${b.id}`)}

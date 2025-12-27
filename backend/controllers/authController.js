@@ -29,20 +29,18 @@ export const postLogin = async (req, res) => {
     const token = jwt.sign({ id: user.id, name: user.name, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
     // Set the token in the cookie
-    res.cookie('token', token, { httpOnly: true });
-     if (user.role === 'admin') {
-	res.json({
-		success:true,
-		role:user.role,
-		token
-    	});
-     }
-    else{
-	res.status(401).json({
-	  success: false,
-	  message: 'Invalid credentials'
-	});
-}
+   res.cookie("token", token, {
+  httpOnly: true,
+  sameSite: "lax",
+  secure: process.env.NODE_ENV === "production",
+  maxAge: 60 * 60 * 1000
+});
+res.json({
+  success: true,
+  message: "Login successful",
+  role: user.role
+});
+
 }
 catch (err) {
     console.error(err);
@@ -84,4 +82,38 @@ data:newUser});
 export const logout = (req, res) => {
   res.clearCookie('token');
   res.json({success:true,message:"Logged out successfully"});
+};
+
+export const updateProfile = async (req, res) => {
+  const userId = req.user.id; // comes from JWT (cookie)
+  const { name, password } = req.body;
+
+  try {
+    // If password is provided, hash it
+    if (password && password.trim() !== "") {
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      await pool.query(
+        "UPDATE users SET name = $1, password = $2 WHERE id = $3",
+        [name, hashedPassword, userId]
+      );
+    } else {
+      // Update only name
+      await pool.query(
+        "UPDATE users SET name = $1 WHERE id = $2",
+        [name, userId]
+      );
+    }
+
+    return res.json({
+      success: true,
+      message: "Profile updated successfully",
+    });
+  } catch (err) {
+    console.error("Update profile error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update profile",
+    });
+  }
 };

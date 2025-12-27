@@ -1,6 +1,6 @@
 import { useState } from "react";
-import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
+import api from "../api/api";   // ✅ use central API
 
 function Register() {
   const [name, setName] = useState("");
@@ -13,26 +13,20 @@ function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // ✅ Check if passwords match before sending request
     if (password !== confirmPassword) {
       setError("Passwords do not match");
       return;
     }
 
     try {
-      const res = await axios.post("/api/auth/register", {
+      await api.post("/auth/register", {
         name,
         email,
         password,
       });
 
-      // Save token if available
-      if (res.data.token) {
-        localStorage.setItem("token", res.data.token);
-      }
-
-      // Redirect to blogs after successful registration
-      navigate("/blogs");
+      // ✅ registration success → login flow
+      navigate("/login");
     } catch (err) {
       setError(err.response?.data?.message || "Registration failed");
     }
@@ -92,6 +86,7 @@ function Register() {
         <button type="submit" style={{ padding: "0.5rem 1rem" }}>
           Register
         </button>
+
         <br />
         <Link to="/login">
           <u>Already have an account? Login here</u>

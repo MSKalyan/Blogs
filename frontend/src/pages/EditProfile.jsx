@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api/api";
 
 function EditProfile() {
   const [user, setUser] = useState(null);
@@ -7,55 +7,41 @@ function EditProfile() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
-  const token = localStorage.getItem("token");
 
   useEffect(() => {
-    if (!token) {
-      setMessage("Please log in to view your profile.");
-      setLoading(false);
-      return;
-    }
-
-    // ✅ Fetch current user details
-    axios.get("/api/auth/me", {
-  headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-})
-
+    // Fetch current user (cookie-based auth)
+    api
+      .get("/auth/me")
       .then((res) => {
-        setUser(res.data.user);
-        setName(res.data.user.name);
+        setUser(res.data);
+        setName(res.data.name);
         setLoading(false);
       })
       .catch((err) => {
-        console.error(err);
-        setMessage("Failed to fetch profile.");
+        console.error("Fetch profile failed:", err);
+        setMessage("Please log in to view your profile.");
         setLoading(false);
       });
-  }, [token]);
+  }, []);
 
   const handleUpdate = async (e) => {
     e.preventDefault();
     setMessage("");
 
     try {
-      const res = await axios.put(
-        "/api/auth/update",
-        { name, password },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      await api.put("/auth/update", { name, password });
+
       setMessage("Profile updated successfully!");
-      setUser({ ...user, name });
+      setUser((prev) => ({ ...prev, name }));
       setPassword("");
     } catch (err) {
-      console.error(err);
+      console.error("Update profile failed:", err);
       setMessage("Error updating profile.");
     }
   };
 
   if (loading) return <p>Loading profile...</p>;
-  if (!token) return <p>{message}</p>;
+  if (!user) return <p>{message}</p>;
 
   return (
     <div style={{ maxWidth: "500px", margin: "2rem auto" }}>
@@ -72,64 +58,62 @@ function EditProfile() {
         </p>
       )}
 
-      {user && (
-        <form onSubmit={handleUpdate}>
-          <div style={{ marginBottom: "1rem" }}>
-            <label>Name:</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              style={{ width: "100%", padding: "0.5rem" }}
-            />
-          </div>
+      <form onSubmit={handleUpdate}>
+        <div style={{ marginBottom: "1rem" }}>
+          <label>Name:</label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            style={{ width: "100%", padding: "0.5rem" }}
+          />
+        </div>
 
-          <div style={{ marginBottom: "1rem" }}>
-            <label>Email:</label>
-            <input
-              type="text"
-              value={user.email}
-              disabled
-              style={{ width: "100%", padding: "0.5rem", background: "#eee" }}
-            />
-          </div>
+        <div style={{ marginBottom: "1rem" }}>
+          <label>Email:</label>
+          <input
+            type="text"
+            value={user.email}
+            disabled
+            style={{ width: "100%", padding: "0.5rem", background: "#eee" }}
+          />
+        </div>
 
-          <div style={{ marginBottom: "1rem" }}>
-            <label>Role:</label>
-            <input
-              type="text"
-              value={user.role}
-              disabled
-              style={{ width: "100%", padding: "0.5rem", background: "#eee" }}
-            />
-          </div>
+        <div style={{ marginBottom: "1rem" }}>
+          <label>Role:</label>
+          <input
+            type="text"
+            value={user.role}
+            disabled
+            style={{ width: "100%", padding: "0.5rem", background: "#eee" }}
+          />
+        </div>
 
-          <div style={{ marginBottom: "1rem" }}>
-            <label>New Password:</label>
-            <input
-              type="password"
-              placeholder="Leave blank to keep current password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              style={{ width: "100%", padding: "0.5rem" }}
-            />
-          </div>
+        <div style={{ marginBottom: "1rem" }}>
+          <label>New Password:</label>
+          <input
+            type="password"
+            placeholder="Leave blank to keep current password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            style={{ width: "100%", padding: "0.5rem" }}
+          />
+        </div>
 
-          <button
-            type="submit"
-            style={{
-              padding: "0.5rem 1rem",
-              background: "#007bff",
-              color: "#fff",
-              border: "none",
-              cursor: "pointer",
-              borderRadius: "5px",
-            }}
-          >
-            Update Profile
-          </button>
-        </form>
-      )}
+        <button
+          type="submit"
+          style={{
+            padding: "0.5rem 1rem",
+            background: "#007bff",
+            color: "#fff",
+            border: "none",
+            cursor: "pointer",
+            borderRadius: "5px",
+          }}
+        >
+          Update Profile
+        </button>
+      </form>
     </div>
   );
 }

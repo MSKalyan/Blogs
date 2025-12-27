@@ -1,9 +1,20 @@
-import { Home, BookOpen, User, Edit, Users } from "lucide-react";
+import { Home, BookOpen, User } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import api from "../api/api";
 
 function Sidebar({ isOpen }) {
-  const isLoggedIn = localStorage.getItem("token");
-  if(!isLoggedIn) return false;
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    api
+      .get("/auth/me")
+      .then(() => setIsLoggedIn(true))
+      .catch(() => setIsLoggedIn(false));
+  }, []);
+
+  if (!isLoggedIn) return null;
+
   return (
     <aside
       className={`fixed top-[64px] left-0 h-[calc(100vh-64px)] w-64 bg-gray-100 shadow-md z-20 transform transition-transform duration-300 ease-in-out ${
@@ -19,30 +30,16 @@ function Sidebar({ isOpen }) {
             <Home /> Home
           </Link>
         </li>
+
         <li>
           <Link
             to="/myblogs"
             className="flex items-center gap-2 cursor-pointer hover:text-blue-600"
           >
-            <BookOpen /> myblogs
+            <BookOpen /> My Blogs
           </Link>
         </li>
-        {/* <li>
-          <Link
-            to="/stories"
-            className="flex items-center gap-2 cursor-pointer hover:text-blue-600"
-          >
-            <Edit /> Stories
-          </Link>
-        </li> */}
-        {/* <li>
-          <Link
-            to="/following"
-            className="flex items-center gap-2 cursor-pointer hover:text-blue-600"
-          >
-            <Users /> Following
-          </Link>
-        </li> */}
+
         <li>
           <Link
             to="/editprofile"

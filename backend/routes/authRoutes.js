@@ -1,11 +1,21 @@
-import express from 'express'
-import { getLogin, postLogin, getRegister, postRegister, logout } from '../controllers/authController.js';
+import express from "express";
+import { postLogin, postRegister, logout,updateProfile } from "../controllers/authController.js";
+import requireAuth from "../middleware/authMiddleware.js";
+
 const router = express.Router();
 
-router.get('/login', getLogin);
-router.post('/login', postLogin);
-router.get('/register', getRegister);
-router.post('/register', postRegister);
-router.get('/logout', logout);
+router.post("/login", postLogin);
+router.post("/register", postRegister);
+router.post("/logout", logout);
 
-export default router
+// 🔴 REQUIRED
+router.get("/me", requireAuth, (req, res) => {
+  res.json({
+    id: req.user.id,
+    name: req.user.name,
+    role: req.user.role,
+  });
+});
+router.put("/update", requireAuth, updateProfile);
+
+export default router;

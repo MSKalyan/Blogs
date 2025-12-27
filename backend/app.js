@@ -11,12 +11,12 @@ import path from 'path';
 import cookieParser from 'cookie-parser';
 import authRoutes from './routes/authRoutes.js';
 import blogRoutes from './routes/blogRoutes.js';
-import indexRoutes from './routes/indexRoutes.js';
+// import indexRoutes from './routes/indexRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import commentRoutes from './routes/commentRoutes.js';
 import multer from 'multer'
 import { fileURLToPath } from 'url';
-
+import cors from "cors"
 // Get the current directory (equivalent to __dirname)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -37,18 +37,31 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 // Middleware
+app.use(
+  cors({
+    origin: "http://localhost:3000", // EXACT match
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type"],
+  })
+);
+
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.get("/api/health", (req, res) => {
+  res.json({ status: "OK", backend: "running" });
+});
+
 // Routes
-app.use('/', indexRoutes);
-app.use('/auth', authRoutes);
-app.use('/blogs', blogRoutes);
-app.use('/admin', adminRoutes);
-app.use('/comments', commentRoutes);
-app.use('/uploads', express.static('uploads'));
+// app.use('/', indexRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/blogs', blogRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/comments', commentRoutes);
+app.use('/api/uploads', express.static('uploads'));
 
 
 // 404 page

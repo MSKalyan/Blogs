@@ -60,7 +60,7 @@ export const viewBlog = async (req, res) => {
       'SELECT COUNT(*) FROM likes WHERE blog_id = $1',
       [id]
     );
-
+    console.log(blog);
     res.json({
       success: true,
       data: {

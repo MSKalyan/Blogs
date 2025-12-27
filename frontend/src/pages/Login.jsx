@@ -1,7 +1,7 @@
 // frontend/src/pages/Login.jsx
 import { useState } from "react";
-import axios from "axios";
-import {Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import api from "../api/api";   // ✅ use centralized api
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -9,21 +9,17 @@ function Login() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+ const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    try {
-      const res = await axios.post("/api/auth/login", { email, password });
+  try {
+    await api.post("/auth/login", { email, password });
+    navigate("/blogs");
+  } catch (err) {
+    setError(err.response?.data?.message || "Login failed");
+  }
+};
 
-      // Save token in localStorage
-      localStorage.setItem("token", res.data.token);
-
-      // Redirect to home
-      navigate("/blogs");
-    } catch (err) {
-      setError(err.response?.data?.message || "Login failed");
-    }
-  };
 
   return (
     <div style={{ maxWidth: "400px", margin: "2rem auto" }}>
@@ -57,8 +53,11 @@ function Login() {
         <button type="submit" style={{ padding: "0.5rem 1rem" }}>
           Login
         </button>
-        <br></br>
-        <Link to="/register"><u>If Not registered click here</u></Link>
+
+        <br />
+        <Link to="/register">
+          <u>If not registered, click here</u>
+        </Link>
       </form>
     </div>
   );
