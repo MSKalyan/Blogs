@@ -1,35 +1,19 @@
-import express from 'express';
-import requireAuth from '../middleware/authMiddleware.js';
-import pool from '../models/db.js';
+import express from "express";
+import requireAuth from "../middleware/authMiddleware.js";
+import * as commentController from "../controllers/commentController.js";
 
 const router = express.Router();
 
-// Add a comment
-router.post('/:blogId', requireAuth, async (req, res) => {
-    const { blogId } = req.params;
-    const { content } = req.body;
-    const userId = req.user.id;
-     if (!content || content.trim() === '') {
-    return res.status(400).json({
-      success: false,
-      message: 'Comment content is required'
-    });
-  }
+// Get all comments for a blog
+router.get("/blog/:blogId", requireAuth, commentController.getCommentsByBlog);
 
-    try {
-    const result = await pool.query(
-            'INSERT INTO comments (blog_id, user_id, content) VALUES ($1, $2, $3)',
-            [blogId, userId, content]
-        );
-res.status(201).json({
-      success: true,
-      message: 'Comment added successfully',
-      data: result.rows[0]
-    });
-  } catch (err) {
-        console.error(err);
-        res.status(500).json({success:false,message:'Failed to add comment'});
-    }
-});
+// Add top-level comment
+router.post("/blog/:blogId", requireAuth, commentController.addComment);
 
-export default router
+// Reply to any comment (unlimited nesting)
+router.post("/:commentId/reply", requireAuth, commentController.replyToComment);
+
+// Like/Dislike toggle
+router.post("/:commentId/react", requireAuth, commentController.reactToComment);
+
+export default router;

@@ -124,16 +124,41 @@ export const getReactions = async (req, res) => {
   }
 };
 
-// Controller to fetch all blog posts (public view for everyone)
 export const getBlogList = async (req, res) => {
   try {
-    const blogs = await getAllBlogs(); // Fetch all blogs from the database
-    res.json({success:true,data:blogs});
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Server Error');
+    const page = Math.max(parseInt(req.query.page) || 1, 1);
+    const limit = Math.min(Math.max(parseInt(req.query.limit)||6, 1), 50);
+    const offset = (page - 1) * limit;
+
+    // total blogs count
+    const totalResult = await pool.query(`SELECT COUNT(*) FROM blogs`);
+    const total = parseInt(totalResult.rows[0].count);
+
+    // fetch paginated blogs
+    const blogsResult = await pool.query(
+      `
+      SELECT *
+      FROM blogs
+      ORDER BY created_at DESC
+      LIMIT $1 OFFSET $2
+      `,
+      [limit, offset]
+    );
+
+    return res.status(200).json({
+      success: true,
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+      blogs: blogsResult.rows,
+    });
+  } catch (error) {
+    console.error("getBlogList pagination error:", error);
+    return res.status(500).json({ success: false, message: "Server error" });
   }
 };
+
 
 // Controller to fetch only the logged-in user's blogs
 export const getMyBlogs = async (req, res) => {

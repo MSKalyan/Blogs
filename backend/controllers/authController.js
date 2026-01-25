@@ -32,7 +32,7 @@ export const postLogin = async (req, res) => {
    res.cookie("token", token, {
   httpOnly: true,
   sameSite: "lax",
-  secure: process.env.NODE_ENV === "production",
+  secure: false,
   maxAge: 60 * 60 * 1000
 });
 res.json({
