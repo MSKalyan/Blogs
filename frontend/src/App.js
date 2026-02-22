@@ -10,6 +10,7 @@ import CreateBlog from "./pages/CreateBlog";
 import EditProfile from "./pages/EditProfile";
 import AdminRoute from "./components/adminRoute";
 import Admin from "./pages/Admin"
+
 function App() {
   return (
     <Router>

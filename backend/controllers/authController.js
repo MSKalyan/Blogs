@@ -1,7 +1,65 @@
 import bcrypt from "bcryptjs";
 import jwt from 'jsonwebtoken';
 import pool from '../models/db.js'; // database connection
+import { OAuth2Client } from "google-auth-library";
 
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+export const googleLogin = async (req, res) => {
+  const { credential } = req.body;
+console.log("Google credential received:", credential);
+  try {
+    if (!credential) {
+      return res.status(400).json({ message: "Missing Google credential" });
+    }
+
+    // ✅ Verify Google token
+    const ticket = await client.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const email = payload.email;
+    const name = payload.name;
+
+    // ✅ Find user in DB
+    let userResult = await pool.query("SELECT * FROM users WHERE email=$1", [email]);
+
+    let user;
+    if (userResult.rows.length === 0) {
+      // ✅ Create user if not exists
+      const newUser = await pool.query(
+        "INSERT INTO users (name,email,role,password) VALUES ($1,$2,$3,$4) RETURNING *",
+        [name, email, "user", "GOOGLE_OAUTH"] // or null
+      );
+      user = newUser.rows[0];
+    } else {
+      user = userResult.rows[0];
+    }
+
+    // ✅ Create your app JWT token
+    const token = jwt.sign(
+      { id: user.id, name: user.name, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+
+    // ✅ Set token cookie
+    res.cookie("token", token, {
+      httpOnly: true,
+      sameSite: "lax", // IMPORTANT if frontend & backend are different domains
+      secure: false,     // REQUIRED for SameSite=None
+      maxAge: 60 * 60 * 1000,
+    });
+
+    return res.json({ success: true, message: "Google login successful" });
+  } catch (err) {
+    console.error(err);
+    return res.status(401).json({ message: "Invalid Google token" });
+  }
+};
 export const getLogin = (req, res) => {
   res.json({message:'Login endpoint'});
 };

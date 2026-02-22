@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../api/api";   // ✅ use centralized api
-
+import {GoogleLogin} from '@react-oauth/google';
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -24,7 +24,24 @@ function Login() {
   return (
     <div style={{ maxWidth: "400px", margin: "2rem auto" }}>
       <h2>Login</h2>
-
+      <GoogleLogin
+  onSuccess={async (credentialResponse) => {
+    try {
+      // Send Google ID token to backend
+      await api.post("/auth/google", {
+        credential: credentialResponse.credential,
+      });
+      console.log(credentialResponse);      
+      navigate("/blogs");
+    } catch (err) {
+      console.log(err);
+      setError("Google login failed");
+    }
+  }}
+  onError={() => {
+    setError("Google login failed");
+  }}
+/>
       {error && <p style={{ color: "red" }}>{error}</p>}
 
       <form onSubmit={handleSubmit}>
