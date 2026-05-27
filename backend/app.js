@@ -39,7 +39,7 @@ const upload = multer({ storage: storage });
 // Middleware
 app.use(
   cors({
-    origin: ["http://localhost:3000", "https://blogs-7jhi.onrender.com"],
+    origin:  "https://blogs-7jhi.onrender.com",
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type"],
