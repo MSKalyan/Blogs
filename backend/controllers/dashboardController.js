@@ -5,17 +5,14 @@ export const getDashboard = async (req, res) => {
   const userId = req.user.id;  // Assuming user ID is in the token (JWT)
 
   try {
-    // Fetch blogs associated with the logged-in user
     const blogs = await getAllMyBlogs(userId);
-
-    // Render the dashboard page with the user's blogs
     res.json({success:true,data:{
       user: req.user,  
      blogs: blogs    
 }
     });
   } catch (err) {
-    console.error(err);
+    console.error("error is : ",err);
     res.status(500).send('Server Error');
   }
 };
