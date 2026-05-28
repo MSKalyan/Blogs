@@ -49,8 +49,8 @@ console.log("Google credential received:", credential);
     // ✅ Set token cookie
     res.cookie("token", token, {
       httpOnly: true,
-      sameSite: "lax", // IMPORTANT if frontend & backend are different domains
-      secure: false,     // REQUIRED for SameSite=None
+      sameSite: "none", // IMPORTANT if frontend & backend are different domains
+      secure: true,     // REQUIRED for SameSite=None
       maxAge: 60 * 60 * 1000,
     });
 
