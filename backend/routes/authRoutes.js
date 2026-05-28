@@ -10,6 +10,7 @@ router.post("/logout", logout);
 router.post("/google",googleLogin);
 // 🔴 REQUIRED
 router.get("/me", requireAuth, (req, res) => {
+  console.log("ME endpoint hit");
   res.json({
     id: req.user.id,
     name: req.user.name,
