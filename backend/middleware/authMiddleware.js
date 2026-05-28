@@ -8,7 +8,8 @@ function requireAuth(req, res, next) {
       .status(401)
       .json({ success: false, message: "Authentication required" });
   }
-
+console.log("Cookies:", req.cookies);
+console.log("Token:", req.cookies?.token);
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
