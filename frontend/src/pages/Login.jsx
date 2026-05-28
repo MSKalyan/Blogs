@@ -13,7 +13,8 @@ function Login() {
   e.preventDefault();
 
   try {
-    await api.post("/auth/login", { email, password });
+    const res = await api.post("/auth/login", { email, password });
+    localStorage.setItem("token", res.data.token);
     navigate("/blogs");
   } catch (err) {
     setError(err.response?.data?.message || "Login failed");
@@ -27,11 +28,10 @@ function Login() {
       <GoogleLogin
   onSuccess={async (credentialResponse) => {
     try {
-      // Send Google ID token to backend
-      await api.post("/auth/google", {
+      const res = await api.post("/auth/google", {
         credential: credentialResponse.credential,
       });
-      console.log(credentialResponse);      
+      localStorage.setItem("token", res.data.token);
       navigate("/blogs");
     } catch (err) {
       console.log(err);

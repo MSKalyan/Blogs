@@ -1,18 +1,18 @@
-// middleware/setUser.js
 import jwt from 'jsonwebtoken';
 
 const setUser = (req, res, next) => {
-  const token = req.cookies.token;
+  const authHeader = req.headers.authorization;
+  const token = authHeader && authHeader.split(" ")[1];
 
   if (token) {
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       req.user = decoded;
     } catch (err) {
-      req.user = null; // Invalid token
+      req.user = null;
     }
   } else {
-    req.user = null; // No token
+    req.user = null;
   }
 
   next();

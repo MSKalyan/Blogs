@@ -21,15 +21,11 @@ function Navbar({ toggleSidebar }) {
       });
   }, []);
 
-  const handleLogout = async () => {
-    try {
-      await api.post("/auth/logout");
-      setIsLoggedIn(false);
-      setRole(null);
-      navigate("/");
-    } catch (err) {
-      console.error("Logout failed:", err);
-    }
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    setIsLoggedIn(false);
+    setRole(null);
+    navigate("/");
   };
 
   return (

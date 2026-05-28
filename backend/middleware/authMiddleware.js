@@ -1,15 +1,15 @@
 import jwt from "jsonwebtoken";
 
 function requireAuth(req, res, next) {
-  const token = req.cookies.token;
+  const authHeader = req.headers.authorization;
+  const token = authHeader && authHeader.split(" ")[1];
 
   if (!token) {
     return res
       .status(401)
       .json({ success: false, message: "Authentication required" });
   }
-console.log("Cookies:", req.cookies);
-console.log("Token:", req.cookies?.token);
+
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;

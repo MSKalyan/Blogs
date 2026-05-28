@@ -46,15 +46,7 @@ console.log("Google credential received:", credential);
       { expiresIn: "1h" }
     );
 
-    // ✅ Set token cookie
-    res.cookie("token", token, {
-      httpOnly: true,
-      sameSite: "none", // IMPORTANT if frontend & backend are different domains
-      secure: true,     // REQUIRED for SameSite=None
-      maxAge: 60 * 60 * 1000,
-    });
-
-    return res.json({ success: true, message: "Google login successful" });
+    return res.json({ success: true, message: "Google login successful", token });
   } catch (err) {
     console.error(err);
     return res.status(401).json({ message: "Invalid Google token" });
@@ -86,17 +78,11 @@ export const postLogin = async (req, res) => {
     // Generate JWT token
     const token = jwt.sign({ id: user.id, name: user.name, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
-    // Set the token in the cookie
-   res.cookie("token", token, {
-  httpOnly: true,
-  sameSite: "lax",
-  secure: false,
-  maxAge: 60 * 60 * 1000
-});
 res.json({
   success: true,
   message: "Login successful",
-  role: user.role
+  role: user.role,
+  token
 });
 
 }
@@ -138,12 +124,11 @@ data:newUser});
 };
 
 export const logout = (req, res) => {
-  res.clearCookie('token');
   res.json({success:true,message:"Logged out successfully"});
 };
 
 export const updateProfile = async (req, res) => {
-  const userId = req.user.id; // comes from JWT (cookie)
+  const userId = req.user.id;
   const { name, password } = req.body;
 
   try {
